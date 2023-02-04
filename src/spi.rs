@@ -127,6 +127,41 @@ where
     pub fn set_clock_polarity<P: Into<Polarity>>(&mut self, cpol: P) {
         self.pol = cpol.into()
     }
+
+    /// Gives up exclusive ownership on the bus to make several shared-bus `SpiDevice`s
+    ///
+    /// This is specific to embedded-hal version 1.
+    pub fn into_spi_devices<const N: usize>(
+        self,
+        chip_selects: [u8; N],
+    ) -> [Result<SpiDevice<Device>, Error<E>>; N] {
+        chip_selects.map(|cs_idx| {
+            let mtx = self.mtx.clone();
+            {
+                let mut lock = mtx.lock().expect("Failed to aquire FTDI mutex");
+                lock.allocate_pin(cs_idx, PinUse::Output);
+
+                let cs_mask: u8 = 1 << cs_idx;
+
+                // set CS as output pin
+                lock.direction |= cs_mask;
+
+                // deassert the chip select pin
+                lock.value |= cs_mask;
+
+                // set CS pin to new state
+                let cmd: MpsseCmdBuilder = MpsseCmdBuilder::new()
+                    .set_gpio_lower(lock.value, lock.direction)
+                    .send_immediate();
+                lock.ft.send(cmd.as_slice())?;
+            }
+            Ok(SpiDevice {
+                mtx,
+                cs_idx,
+                pol: self.pol,
+            })
+        })
+    }
 }
 
 impl<Device, E> eh0::blocking::spi::Write<u8> for Spi<Device>
@@ -466,6 +501,9 @@ where
             // set SCK (AD0) and MOSI (AD1), and CS as output pins
             lock.direction |= 0x03 | cs_mask;
 
+            // deassert the chip select pin
+            lock.value |= cs_mask;
+
             // set GPIO pins to new state
             let cmd: MpsseCmdBuilder = MpsseCmdBuilder::new()
                 .set_gpio_lower(lock.value, lock.direction)
@@ -534,16 +572,14 @@ where
         // lock the bus
         let mut lock: MutexGuard<FtInner<Device>> =
             self.mtx.lock().expect("Failed to aquire FTDI mutex");
-        let direction: u8 = lock.direction;
 
         // assert the chip select pin
-        let value_cs_asserted: u8 = lock.value & !self.cs_mask();
-        lock.ft.send(
-            MpsseCmdBuilder::new()
-                .set_gpio_lower(value_cs_asserted, direction)
-                .send_immediate()
-                .as_slice(),
-        )?;
+        lock.value &= !self.cs_mask();
+
+        let cmd: MpsseCmdBuilder = MpsseCmdBuilder::new()
+            .set_gpio_lower(lock.value, lock.direction)
+            .send_immediate();
+        lock.ft.send(cmd.as_slice())?;
 
         // call f with an exclusive reference to the bus
         let mut bus: SpiDeviceBus<'a, Device> = SpiDeviceBus {
@@ -561,13 +597,12 @@ where
         let mut lock: MutexGuard<FtInner<Device>> = bus.lock;
 
         // deassert the chip select pin
-        let value_cs_deasserted: u8 = lock.value | self.cs_mask();
-        lock.ft.send(
-            MpsseCmdBuilder::new()
-                .set_gpio_lower(value_cs_deasserted, direction)
-                .send_immediate()
-                .as_slice(),
-        )?;
+        lock.value |= self.cs_mask();
+
+        let cmd: MpsseCmdBuilder = MpsseCmdBuilder::new()
+            .set_gpio_lower(lock.value, lock.direction)
+            .send_immediate();
+        lock.ft.send(cmd.as_slice())?;
 
         // unlocking the bus is implicit via Drop
         bus_result
