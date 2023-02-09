@@ -608,3 +608,38 @@ where
         bus_result
     }
 }
+
+impl<'a, Device, E> SpiDevice<Device>
+where
+    Device: MpsseCmdExecutor<Error = E>,
+    E: std::error::Error,
+    Error<E>: From<E>,
+{
+    /// Like transfer, but does everything in one MPSSE command
+    pub fn fast_transfer(&'a mut self, read: &mut [u8], write: &[u8]) -> Result<(), E> {
+        // lock the bus
+        let mut lock: MutexGuard<FtInner<Device>> =
+            self.mtx.lock().expect("Failed to aquire FTDI mutex");
+
+        // assert the chip select pin
+        lock.value &= !self.cs_mask();
+
+        let cmd: MpsseCmdBuilder = MpsseCmdBuilder::new();
+        let cmd = cmd
+            .set_gpio_lower(lock.value, lock.direction)
+            .send_immediate();
+        // lock.ft.send(cmd.as_slice())?;
+
+        let cmd = cmd.clock_data(self.pol.clk, write).send_immediate();
+
+        // deassert the chip select pin
+        lock.value |= self.cs_mask();
+
+        let cmd = cmd
+            .set_gpio_lower(lock.value, lock.direction)
+            .send_immediate();
+
+        lock.ft.xfer(cmd.as_slice(), read)?;
+        Ok(())
+    }
+}
