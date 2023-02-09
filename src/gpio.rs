@@ -65,6 +65,13 @@ impl<Device: MpsseCmdExecutor> OutputPin<Device> {
     }
 }
 
+impl<Device: MpsseCmdExecutor> Drop for OutputPin<Device> {
+    fn drop(&mut self) {
+        let mut lock = self.mtx.lock().expect("Failed to aquire FTDI mutex");
+        lock.deallocate_pin(self.idx);
+    }
+}
+
 impl<Device, E> eh1::digital::ErrorType for OutputPin<Device>
 where
     Device: MpsseCmdExecutor<Error = E>,
@@ -159,6 +166,13 @@ impl<Device: MpsseCmdExecutor> InputPin<Device> {
     /// Convert the GPIO pin index to a pin mask
     pub(crate) fn mask(&self) -> u8 {
         1 << self.idx
+    }
+}
+
+impl<Device: MpsseCmdExecutor> Drop for InputPin<Device> {
+    fn drop(&mut self) {
+        let mut lock = self.mtx.lock().expect("Failed to aquire FTDI mutex");
+        lock.deallocate_pin(self.idx);
     }
 }
 

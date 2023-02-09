@@ -212,6 +212,12 @@ impl<Device: MpsseCmdExecutor> FtInner<Device> {
             self.pins[usize::from(idx)] = Some(purpose)
         }
     }
+
+    pub fn deallocate_pin(&mut self, idx: u8) {
+        assert!(idx < 8, "Pin index {idx} is out of range 0 - 7");
+
+        self.pins[usize::from(idx)].take();
+    }
 }
 
 impl<Device: MpsseCmdExecutor> From<Device> for FtInner<Device> {
