@@ -26,12 +26,18 @@ where
     pub(crate) fn new(
         mtx: Arc<Mutex<FtInner<Device>>>,
         idx: u8,
+        initial: bool,
     ) -> Result<OutputPin<Device>, Error<E>> {
         {
             let mut lock = mtx.lock().expect("Failed to aquire FTDI mutex");
 
             lock.direction |= 1 << idx;
             lock.allocate_pin(idx, PinUse::Output);
+            if initial {
+                lock.value |= mask(idx);
+            } else {
+                lock.value &= !mask(idx);
+            };
             let cmd: MpsseCmdBuilder = MpsseCmdBuilder::new()
                 .set_gpio_lower(lock.value, lock.direction)
                 .send_immediate();
@@ -58,10 +64,14 @@ where
     }
 }
 
+pub(crate) fn mask(idx: u8) -> u8 {
+    1 << idx
+}
+
 impl<Device: MpsseCmdExecutor> OutputPin<Device> {
     /// Convert the GPIO pin index to a pin mask
     pub(crate) fn mask(&self) -> u8 {
-        1 << self.idx
+        mask(self.idx)
     }
 }
 

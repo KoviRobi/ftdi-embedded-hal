@@ -444,8 +444,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad0(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 0)
+    pub fn ad0(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 0, initial)
     }
 
     /// Aquire the digital input pin 0 for the FT232H.
@@ -462,8 +462,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad1(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 1)
+    pub fn ad1(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 1, initial)
     }
 
     /// Aquire the digital input pin 1 for the FT232H.
@@ -480,8 +480,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad2(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 2)
+    pub fn ad2(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 2, initial)
     }
 
     /// Aquire the digital input pin 2 for the FT232H.
@@ -498,8 +498,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad3(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 3)
+    pub fn ad3(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 3, initial)
     }
 
     /// Aquire the digital input pin 3 for the FT232H.
@@ -516,8 +516,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad4(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 4)
+    pub fn ad4(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 4, initial)
     }
 
     /// Aquire the digital input pin 4 for the FT232H.
@@ -534,8 +534,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad5(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 5)
+    pub fn ad5(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 5, initial)
     }
 
     /// Aquire the digital input pin 5 for the FT232H.
@@ -552,8 +552,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad6(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 6)
+    pub fn ad6(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 6, initial)
     }
 
     /// Aquire the digital input pin 6 for the FT232H.
@@ -570,8 +570,8 @@ where
     /// # Panics
     ///
     /// Panics if the pin is already in-use.
-    pub fn ad7(&self) -> Result<OutputPin<Device>, Error<E>> {
-        OutputPin::new(self.mtx.clone(), 7)
+    pub fn ad7(&self, initial: bool) -> Result<OutputPin<Device>, Error<E>> {
+        OutputPin::new(self.mtx.clone(), 7, initial)
     }
 
     /// Aquire the digital input pin 7 for the FT232H.
