@@ -1,14 +1,14 @@
 use std::fmt;
 use std::io;
 
-/// HAL error type combines 3 types of errors:
-/// * internal HAL errors
-/// * I/O errors
-/// * FTDI drivers errors
+/// Error type.
 #[derive(Debug)]
 pub enum Error<E: std::error::Error> {
+    /// Errors internal to this crate.
     Hal(ErrorKind),
+    /// IO error
     Io(io::Error),
+    /// Backend-specific error
     Backend(E),
 }
 /// Internal HAL errors
